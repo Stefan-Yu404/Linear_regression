@@ -1,0 +1,177 @@
+---
+title: "Linear_regression_with_one_predictor"
+output: pdf_document
+date: "2022-11-30"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1.1 Statistical models  
+$Y_i = \beta_0 + \beta_1X_i + \epsilon_i$  
+$X_i: $ a known constant, the values of the predictor/independent/explanatory variable of the i-th trial.  
+$Y_i: $ the expectation values of the dependent/response variable of the i-th trial.
+$\epsilon_i: $ a random error term. E[$\epsilon_i$] = 0, $\sigma^2[\epsilon_i] = \sigma^2$, $\sigma\{\epsilon_i,\epsilon_j\} = 0, \forall i \neq j $.  
+
+## 1.1.1 Normal equations  
+(1.) $Q = \sum_{i = 0}^n\epsilon_i^2 = \sum_{i = 0}^n(Y_i - \beta_0 - \beta_1X_i)^2$  
+To minimize it, using partial differential equations, from which we get normal equations:  
+\[\sum_{i = 1}^{n}Y_i = nb_0 + b_1\sum_{i = 0}^{n}X_i\]
+\[\sum_{i = 1}^{n}X_iY_i = b_0\sum_{i = 0}^{n}X_i + b_1\sum_{i = 0}^{n}X_i^2\]  
+($b_0,\;b_1$ are the values of $\beta_0,\;\beta_1$ to minimize Q.)  
+
+(2.) From normal equations, we get:  
+\[b_1 = \sum_{i = 1}^{n}\frac{(X_i - \bar{X})}{\sum_{i = 1}^{n}(X_i - \bar{X})^2}Y_i= \sum_{i = 1}^{n}k_iY_i\]
+\[\bar{Y} - b_1\bar{X}=\sum_{i = 1}^{n}l_iY_i\]
+
+(3.) Gauss-Markov theorem:  
+\[\hat{Y} = b_0 + b_1X\]
+--$E[\hat{Y_i}] = E[Y_i]$ (unbiased)  
+--$\hat{Y_i}$ has the minimum variance among all linear estimators.  
+
+## 1.1.2 Propertes  
+$\sum_{i = 1}^{n}e_i = 0$  
+$\sum_{i = 1}^{n}e_i^2$ is minimized.  
+$\sum_{i = 1}^{n}\hat{Y_i} = \sum_{i = 1}^{n}Y_i$  
+$\sum_{i = 1}^{n}X_ie_i = 0$  
+$\sum_{i = 1}^{n}\hat{Y_i}e_i = 0$  
+The fitted line cross ($\bar{X}, \bar{Y}$).
+
+## 1.1.3 Estmation of error variance   
+\[E[Y_i] = \beta_0 + \beta_1X_i\]
+\[\sigma^2[Y_i] = \sigma^2\]
+\[s^2 = \frac{\sum_{i = 1}^{n}(Y_i - \hat{Y_i})^2}{n-2} = \frac{\sum_{i = 1}^{n}e_i^2}{n-2}\]
+\[SSE = \sum_{i = 1}^{n}e_i^2\]
+\[MSE = s^2 = \frac{SSE}{n-2}\]
+
+## 1.1.4 Maximum lkelihood estimators  
+(Comments)
+Assume $\epsilon_i \sim N(0, \sigma^2)$  
+Using maximum likelihood, we get the same estimation of $\hat{\beta_0}$, $\hat{\beta_1}$, but a biased error variance:  
+\[\hat{\sigma}^2 = \frac{\sum_{i = 1}^{n}(Y_i - \hat{Y_i})^2}{n} = \frac{\sum_{i = 1}^{n}e_i^2}{n}\]  
+  
+  
+# 1.2  Inferences in Regression analysis  
+Confidence interval format: estimate $\pm$ critical_value $\times$ SE
+## 1.2.1 Inferences with respect to the parameters $\beta_1$, $\beta_0$  
+(1.) Inference concering $\beta_1$
+According to 1.1.1(2.), we get:
+\[E[b_1] = \beta_1\]
+\[\sigma^2[b_1] = \frac{\sigma^2}{\sum_{i = 1}^{n}(X_i - \bar{X}^2)}\]
+We use unbiased estimator:  
+\[s^2[b_1] = \frac{MSE}{\sum_{i = 1}^{n}(X_i - \bar{X}^2)}\]
+\[s[b_1] = \frac{\sqrt{MSE}}{\sqrt{\sum_{i = 1}^{n}(X_i - \bar{X}^2)}}\]
+$b_1 \sim N(\beta_1, \frac{\sigma^2}{\sum_{i = 1}^{n}(X_i - \bar{X}^2)})$  
+($\frac{(n-2)MSE}{\sigma^2} \sim \chi^2(n-2)$, $b_1 - \beta_1 \sim N(0, \frac{\sigma^2}{\sum_{i = 1}^{n}(X_i - \bar{X}^2)})$)
+Then we have:  
+\[\frac{b_1 - \beta_1}{s[b_1]} = \frac{\frac{b_1 - \beta_1}{\sigma[b_1]}}{\sqrt{\frac{MSE}{\sigma^2}}} = \frac{N(0,1)}{\sqrt{\frac{\chi(n-2)}{(n-2)}}} \sim t(n-2)\]  
+For $(1-\alpha)100\%$ confidence interval:  
+-- Two sided:  
+$H_0:  \beta_1 = c$, $H_a:$ $\beta_1 \neq c$.  
+$t^* = \frac{b_1 -c}{s[b_1]}$  
+Confidence interval: $c \pm t(1-\frac{\alpha}{2})s[b_1]$  
+Decision Rule: Conclude $H_a$ if $|t^*| \geq t(1-\frac{\alpha}{2};n-2)$, otherwise Conclude $H_0$.  
+P-value: $2P(t(n-2)\geq |t^*|)$
+-- 1-sided(Upper)  
+$H_0:  \beta_1 = c$, $H_a:$ $\beta_1 \geq c$.  
+$t^* = \frac{b_1 -c}{s[b_1]}$  
+Decision Rule: Conclude $H_a$ if $t^* \geq t(1-\alpha;n-2)$, otherwise Conclude $H_0$.  
+P-value: $P(t(n-2)\geq t^*)$  
+-- 1-sided(Lower)  
+$H_0:  \beta_1 = c$, $H_a:$ $\beta_1 \leq c$.  
+$t^* = \frac{b_1 -c}{s[b_1]}$  
+Decision Rule: Conclude $H_a$ if $t^* \leq -t(1-\alpha; n-2)$, otherwise Conclude $H_0$.  
+P-value: $P(t(n-2)\leq t^*)$  
+  
+  
+(2.) Inference concering $\beta_0$  
+In the same way as (1.), we get:  
+\[E[b_0] = \beta_0\]
+\[\sigma^2[b_0] = \sigma^2[\frac{1}{n}+\frac{\bar{X}^2}{\sum_{i = 1}^{n}(X_i - \bar{X})^2}]\]
+\[s^2[b_0] = MSE[\frac{1}{n}+\frac{\bar{X}^2}{\sum_{i = 1}^{n}(X_i - \bar{X})^2}]\]
+\[s[b_0] = \sqrt{MSE[\frac{1}{n}+\frac{\bar{X}^2}{\sum_{i = 1}^{n}(X_i - \bar{X})^2}]}\]
+ We can similar discussion mentioned above to do three kinds of hypothesis test.  
+ 
+ Remarks:  
+ The variance of $b_0,\;b_1$ descrease as the X levels are more spread out.  
+   
+  
+## 1.2.2 Confidence interval and predictions concerning $E[Y_h]$  
+(1.) Confidence interval for $E[Y_h]$  
+Parameter: $E[Y_h]$ = $\beta_0 + \beta_1X_h$  
+Estimator: $\hat{Y_h} = b_0+ b_1X_h$  
+Variance:  
+\[\sigma^2[\hat{Y_h}] = \sigma^2[b_0+b_1X_h] = \sigma^2[\frac{1}{n}+ \frac{(X_h - \bar{X})^2}{\sum_{i = 1}^{n}(X_i - \bar{X})^2}]\]
+\[s^2[\hat{Y_h}] =  MSE[\frac{1}{n}+ \frac{(X_h - \bar{X})^2}{\sum_{i = 1}^{n}(X_i - \bar{X})^2}]\]
+\[s[\hat{Y_h}] = \sqrt{MSE[\frac{1}{n}+ \frac{(X_h - \bar{X})^2}{\sum_{i = 1}^{n}(X_i - \bar{X})^2}]}\]
+$\frac{\hat{Y_h} - E[Y_h]}{s[\hat{Y_h}]}\sim t(n-2)$, and the confidence interval is $\hat{Y_h} \pm t(1-\alpha/2; n-2)s[\hat{Y_h}]$  
+  
+  
+(2.) Predict an observation with repect to a known X  
+After getting $E[Y_h]$, it is the predicted mean value, to predict an observation, we should include one more $\sigma$ term.  
+\[\sigma^2[pred] = \sigma^2[Y_h - \hat{Y_h}] = \sigma^2+\sigma^2[\hat{Y_h}]\]
+\[\sigma^2[pred] = \sigma^2[1+\frac{1}{n}+ \frac{(X_h - \bar{X})^2}{\sum_{i = 1}^{n}(X_i - \bar{X})^2}]\]
+\[s^2[pred] =  MSE[1 + \frac{1}{n}+ \frac{(X_h - \bar{X})^2}{\sum_{i = 1}^{n}(X_i - \bar{X})^2}]\]
+\[s[pred] = \sqrt{MSE[1 + \frac{1}{n}+ \frac{(X_h - \bar{X})^2}{\sum_{i = 1}^{n}(X_i - \bar{X})^2}]}\]  
+Especially, to obtain a prediction for the mean of m new observations when X = X_h.  
+\[\[s^2[pred\ mean] =  MSE[\frac{1}{m} + \frac{1}{n}+ \frac{(X_h - \bar{X})^2}{\sum_{i = 1}^{n}(X_i - \bar{X})^2}]\]\]  
+  
+  
+## 1.2.3 Confidence Band for the Entire Regression Line  
+The Working-Hotelling 1-$\alpha$ confidence band for the regression line at any level $X_h$:  
+\[\hat{Y_h} \pm W s[\hat{Y_h}]; \;\;\;\;\;\; W = \sqrt{2F(1-\alpha; n-2)}\]
+The confidence interval provided above is much wider than the confidence interval for the mean response at $X_h$  
+
+## 1.2.4 Analysis of Variance approach to Regression
+(1.)  SS terms  
+SSTO(sum of squares, Total) = $\sum_{i = 1}^{n}(Y_i-\bar{Y})^2 $  
+SSE(sum of squares, Error) = $\sum_{i = 1}^{n}(Y_i - \hat{Y_i})^2 = \sum_{i = 1}^{n}e_i^2$  
+SSR(sum of squares, Regression) = $\sum_{i = 1}^{n}(\hat{Y_i} - \bar{Y})^2$  
+SSTO = SSE +SSR  
+
+\begin{tabular}{l|r|r|r|r|r|}
+\hline
+Source & df & SS & MS$ F\\
+\hline
+Regression & 1 & SSR & MSR = SSR/1 & F = MSR/MSE\\
+\hline
+Error & n-2 & SSE & MSR = SSR/(n-2) & \\
+\hline
+C Total & n-1 & SSTO &  & \\
+\hline
+\end{tabular}  
+  
+(2.) F test of $\beta_1 = 0$ vs $\beta_1 \neq 0$  
+$H_0:  \beta_1 = 0$, $H_a:$ $\beta_1 \neq 0$.  
+$F^* = \frac{SSR/1}{SSE/(n-2)} = \frac{MSR}{MSE}$  
+Decision Rule: Conclude $H_a$ if Ft^* \geq F(1-\alpha;1,n-2)$, otherwise Conclude $H_0$.  
+P-value: $P(F(n-2)\geq F^*)$  1
+If we compare the result with 1.1.2., when c = 0, we will have the same conclusion.  
+  
+(3.) Use Full/Reduced Model to Test  
+It is implemented to test whether a parameter is 0 or not.  
+For example, if we want to test parameter $\beta_1$. Then the Full model and the Reduced model is as follows:  
+\[Y_i = \beta_0 + \beta_1X_i + \epsilon_i\]
+\[Y_i = \beta_0 + \epsilon_i\]
+From which, it can be easily find that SSE(F) = SSE, and SSE(R) = SSTO.  
+The test statistic is $F^* = \frac{\frac{SSE(R) - SSE(F)}{df_R-df_F}}{\frac{SSE(F)}{df_F}} = \frac{MSR}{MSE}$ It is actually the same F-test mentioned in 1.2.4(2.) with the same hypothesis. However, Using the Full and the Reduced model to test is a much more general method.  
+  
+  
+(4.) Descriptive Meeasures of Association  
+Coefficient of Determination($R^2$) measures the proportion of the variation in Y can be explained by the regression on X.  
+\[R^2 = \frac{SSR}{SSTO} = 1 - \frac{SSE}{SSTO}, \;\;\; 0\leq R^2\leq 1\]
+Coefficient of Correlation(r) measures the strenghth of the linear association between Y and X. It has the same sign as $b_1$.
+\[r = sgn(b_1)\sqrt{R^2}\]  
+  
+Remark:  
+-- When we try to predict futures, the assumption is that the conditios are the same.  
+-- When we do test and inference, they should be done within the range of X.  
+-- The linear regression coeffiecients(like $R^2,\; r$) doesn't mean causality.  
+-- $X_i$ are independent.  
+  
+  
+# 1.3 Diagnostics and Remedical Measures(one predictor variable)  
+It helps to determine the correct model and check before doing inferences.
+
+
