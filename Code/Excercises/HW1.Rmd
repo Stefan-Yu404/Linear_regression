@@ -1,0 +1,79 @@
+---
+title: "HW1"
+author: "Zeqiu.Yu"
+date: "2022-10-02"
+output: pdf_document
+---
+
+Question 1.5  
+No.
+The simple linear model should be stated as 
+\[Y_i = \beta_0 + \beta_1X_i + \epsilon_i\] or
+\[E\{Y_i\} = \beta_0 + \beta_1X_i\]
+
+
+Question 1.19
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+input1 <- read.table("./CH01PR19.txt")
+names(input1) <- c("GPA","ACT")
+```
+(a.) 
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+fit1 <- lm(GPA~ACT, data = input1)
+summary(fit1)
+```
+\[b_0 = 2.11405, b_1 = 0.03883.\] Then we get:
+\[\hat{Y} = 2.11405 + 0.03883 X\]
+
+(b.) Plot the estimated regression function and the data. Does the estimated regression function appear to fit the data well.
+```{r, echo = FALSE, eval = TRUE, warning = FALSE, result = TRUE,include = TRUE}
+require(ggplot2)
+g <- ggplot(input1, aes(x = ACT, y = GPA))
+g + geom_point(size = 2,color = "blue") + geom_smooth(method = lm, se = TRUE,linetype = "dashed",color = "red") + geom_rug()
+```
+
+The estimated regression funnction doesn't seem to fit it well. The distribustion of the points is so spread and the linear model has a relative low adjusted R-squared value 0.06476.
+
+(c.) Obtain a point estimate of the mean fresh man GPA for students with ACT test score X = 30.
+\[\hat{Y} = 2.11405 + 0.03883 X = 3.27895\]
+
+(d) What is the point estimate of the change in the mean response when the entrance test score increase by one point?
+\[1 \times b_1 = 0.03883\]
+
+1.27
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+input2 <- read.table("./CH01PR27.txt")
+names(input2) <- c("muscle_mass","Age")
+```
+(a.) 
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+fit2 <- lm(muscle_mass~Age, data = input2)
+summary(fit2)
+```
+
+The esitimated regression function is:
+\[\hat{Y} = 156.3466 -1.1900X\]
+```{r, echo = FALSE, eval = TRUE, warning = FALSE, result = TRUE,include = TRUE}
+require(ggplot2)
+g <- ggplot(input2, aes(x = Age, y = muscle_mass))
+g + geom_point(size = 2,color = "blue") + geom_smooth(method = lm, se = TRUE,linetype = "dashed",color = "red") + geom_rug()
+```
+The linear function appear to give good fit and the plot proves the anticipation that the muscle mass decreases with age.
+
+(b.) 
+(1) \[-1.1900\times 1 = -1.19\]
+(2) \[\hat{Y} = 156.3466 -1.1900\times 60 = 84.9466\]
+(3) For the eighth case, $X_8$ = 41 and $Y_8$ = 112
+\[e_8 = Y_8 - \hat{Y_8} = 112 - (156.3466 -1.1900\times 41) = 4.4434\]
+(4) We use MSE to estimate $\sigma^2$.
+\[s^2 = \frac{1}{n-2}\sum_{i = 1}^n e_i^2\]
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+squaredError <- (input2$muscle_mass - (156.3466 -1.1900*input2$Age))^2
+s2 <- sum(squaredError)/(dim(input2)[1] - 2)
+print(s2)
+```
+Hence, a point estimation of $\sigma^2$ is 66.80082.
+
+
+(Remark: the values of $b_0$ and $b_1$ is consistent with the values calculated by the formula proved in the textbook.)
+

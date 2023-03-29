@@ -1,0 +1,108 @@
+---
+title: "HW2"
+author: "Zeqiu.Yu"
+date: "2022-10-10"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Homework2  
+## Question 2.27
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+input1 <- read.table("./BookDataSets/Chapter  1 Data Sets/CH01PR27.txt")
+names(input1) <- c("muscle_mass","Age")
+```
+a.  
+By hypothesis test:
+$H_0\;:\beta_1 = 0$ and $H_a\;:\beta_1 < 0$
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+fit <- lm(muscle_mass~Age, data = input1)
+summary(fit)
+```
+Then the test statistic $t^{*} = \frac{b_1 - 0}{s\{b_1\}} = \frac{(-1.19) - 0}{0.0902} = -13.1929$  
+$H_0\;:\beta_0 \geq 0$ and $H_a\;:\beta_0 < 0$
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+t_value = -qt(0.95, 58)
+p_value = pt(-13.1929,58, lower.tail = TRUE)
+print(sprintf("The t-value is:%.4f, and the p-value is: %.2f", t_value, p_value))
+```
+We accept $H_a$ because $t^{*}<t-value$
+
+b. The answer is yes. The p-value is so small(<0.05) that can be used to reject $H_0\; : \beta_0 = 0$. That is to say, $b_0$ provides information.  
+c. 
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+confint(fit, "Age", level=0.95)
+```
+$\hat{Y_i} = b_0 + b_1X$ and $\hat{Y_{i+1}} = b_0 + b_1(X+1)$, $\Delta\hat{Y_i} = \hat{Y_{i+1}}-\hat{Y_i} = b_1$. Hence, it is not necessary to know the specific ages to make this estimate.
+
+## Question 2.28  
+a. 
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+alpha = 0.05
+x_new = data.frame(Age = 60)
+predict(fit, x_new, interval = "confidence", level = 1-alpha, se.fit = TRUE)
+```
+The confidence interval is [82.83471, 87.05895]. We are 95% confident that the mean muscle mass for women aged 60 is between 82.83471 to 87.05895.  
+
+b.  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+alpha = 0.05
+x_new = data.frame(Age = 60)
+predict(fit, x_new, interval = "prediction", level = 1-alpha)
+```
+The prediction interval is [68.45067, 101.443]. It's not in comparision with the result of a.  
+
+c.  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+alpha = 0.05
+x_new = data.frame(Age = 60)
+CI <- predict(fit, x_new, interval = "prediction", level = 1-alpha, se.fit = TRUE)
+Y_h_hat <- CI$fit[1]
+Y_h_hat.se <- CI$se.fit
+W <- sqrt(2*qf(1-alpha, 2, 58))
+Band <- c(Y_h_hat - W*Y_h_hat.se, Y_h_hat + W*Y_h_hat.se)
+Band
+```
+Yes. It is wider and it should be, because the confidence band encompass the entire regression line and one is able to draw conclusion about any values of X.  
+
+## Question 2.29
+a.  
+```{r, echo = FALSE, eval = TRUE, warning = FALSE, result = TRUE,include = TRUE}
+library(ggplot2)
+# library(gridExtra)
+library(cowplot)
+DF <- data.frame(input1$Age, input1$muscle_mass, -1.19*input1$Age + 156.3466)
+names(DF) <- c("X","Y","Y_hat")
+p1 <- ggplot(DF, aes(x = X, y = Y-Y_hat)) + 
+  geom_point(size = 2,color = "blue") + 
+  theme_classic() +
+  theme(plot.background = element_rect(color = "black"))
+p2 <- ggplot(DF, aes(x = X, y = Y_hat-mean(Y))) + 
+  geom_point(size = 2,color = "blue") + 
+  theme_classic() +
+  theme(plot.background = element_rect(color = "black"))
+plot_grid(p1, p2, ncol = 2, align = "v")
+```
+$\hat{Y_i} - \bar{Y}$ has larger range and and then SSR has larger component. $R^2 = \frac{SSR}{SSTO}$, $R^2$ tend to be larger and therefore the proportion of the variation of Y can be "explained" by X the regression on X is larger.  
+
+b. 
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+anova(fit)  
+```
+c. Let $H_0\; : \beta_1 = 0$ and $H_a\; : \beta_1 \neq 0$.
+$f^{*} \leq$ the critial value, I fail to reject $H_0$, otherwise accept $H_a$.  
+$f^{*} = \frac{11627.5/1}{66.8} = 174.0623>F(1-\alpha; 1, 58) = 4.006873$. Then we accept $H_a$.  
+d.
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+VA = anova(fit)
+SSR <- VA$"Sum Sq"[1]
+SSE <- VA$"Sum Sq"[2]
+R_sq <- SSR/(SSR+SSE)
+1- R_sq
+```
+e. 
+$R^2 = 0.7500668$, $r = -0.866064$
+

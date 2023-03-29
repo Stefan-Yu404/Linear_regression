@@ -1,0 +1,244 @@
+---
+title: "HW6"
+author: "Zeqiu.Yu"
+date: "2022-11-13"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+  
+# HW 6    
+## 9.11  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+input1 <- read.table("./BookDataSets/Chapter  9 Data Sets/CH09PR10.txt")
+names(input1) <- c("Y", "X1", "X2", "X3", "X4")
+```
+(a.)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+library(leaps)
+Result.adjr2 <- leaps(x = input1[,2:5], y = input1[,1], names = names(input1)[2:5], method = "adjr2")
+Result.adjr2 <- data.frame(Result.adjr2$which, Result.adjr2$adjr2)
+colnames(Result.adjr2)[5] <- "adjr2"
+Result.adjr2[order(Result.adjr2$adjr2, decreasing = TRUE), ]
+```
+  
+  
+Hence, according to the $R_{a,p}^2$ criterion, the four best subset regression models are:  
+\begin{tabular}{|r|r|}
+\hline
+Subset & $R^2_{a,p}$\\
+\hline
+X1, X3, X4 & 0.9560482\\
+\hline
+X1, X2, X3, X4 & 0.9554702\\
+\hline
+X1, X3 & 0.9269043\\
+\hline
+X1, X2, X3 & 0.9246779\\
+\hline
+\end{tabular}  
+  
+(b.)  
+I'd like to use Mallow's $C_p$ Criterion.  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+Result.Cp <- leaps(x = input1[,2:5], y = input1[,1], names = names(input1)[2:5], method = c("Cp"))
+Result.Cp <- data.frame(Result.Cp$which, Result.Cp$Cp)
+colnames(Result.Cp)[5] <- "Cp"
+Result.Cp[order(Result.Cp$Cp, decreasing = FALSE), ]
+```
+p = 5, the models are considered to be "good" if $C_p \approx p$ or $C_p \leq p$.  
+Hence, according to the $C_p$ criterion, the best subset regression models are:  
+\begin{tabular}{|r|r|}
+\hline
+Subset & $C_p$\\
+\hline
+X1, X3, X4 & 3.727399\\
+\hline
+X1, X2, X3, X4 & 5.000000\\
+\hline
+\end{tabular}  
+  
+  
+(c.)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+fit.Full <- lm(Y~., data = input1)
+selected.model <- step(fit.Full, scope = list(upper = fit.Full, lower = ~1), direction = "both", trace = FALSE)
+selected.model
+Y.predict <- predict(selected.model, input1)
+output <- data.frame("Y"=input1$Y, "Y_hat"=Y.predict)
+output
+```
+
+  
+  
+## 10.10
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+input2 <- read.table("./BookDataSets/Chapter  6 Data Sets/CH06PR09.txt", header = FALSE)
+colnames(input2) <- c("Y", "X1", "X2","X3")
+n <- dim(input2)[1]
+p <- 4
+fit <- lm(Y~X1+X2+X3, data = input2)
+```
+  
+(a. )  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+Case <- c(1:n)
+plot(Case, rstudent(fit), type = "l")
+text(Case, rstudent(fit), Case)
+rstudent(fit)
+alpha <- 0.05
+crit <- qt(1-alpha/2/n, n-p-1)
+paste("The Boferroni critical value is: ", crit)
+```
+Decision Rule: for the test statistics $t^*$, if |$t_i$|<$t^*$, conclude $H_0:$ no outliers. Otherwise, conclude $H_a$.  
+Conclusion: There are no outliers with $\alpha = 0.05$  
+  
+(b.)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+leverage <- hatvalues(fit)
+leverage[which(leverage>2*p/n)]
+plot(Case, leverage, type = "l")
+text(Case, leverage, Case)
+abline(h=2*p/n, col =2)
+```
+Rule of thumb determining if $h_{ii}$ is "larger":  
+according to the red line in the figure above, $h_{ii} = 2p/n$, Case 3, 5, 16, 21, 22, 43, 44, 48 are outling X observations.  
+  
+  
+(c.)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+plot(input2$X1, input2$X2)
+points(300000, 7.2, col = 2, pch = 20)
+X <- cbind(rep(1,n), input2$X1, input2$X2, input2$X3)
+head(X)
+X.new <- c(1,300000, 7.2, 0)
+h.new.new <- t(X.new)%*%solve(t(X)%*%X)%*%X.new
+h.new.new
+summary(hatvalues(fit))
+hist(hatvalues(fit))
+```
+$h_{new, new}$ is within [0.02189, 0.06956], then no extrapolaion is indicated. Visually, according to the plot of X2 against X1, the new observation shows no extreme. Hence, the conclusions agree from these two methods.  
+
+(d.)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+# Cook's distance values
+CD <- cooks.distance(fit)[c(16, 22, 43, 48, 10, 32, 38, 40)]
+CD
+pf(CD, p, n-p)
+# DFFITS
+DFFITS <- dffits(fit)[c(16, 22, 43, 48, 10, 32, 38, 40)]
+DFFITS
+DFFITS > 1 # small data set
+# DFBETAS
+DFBETAS <- dfbetas(fit)[c(16, 22, 43, 48, 10, 32, 38, 40)]
+DFBETAS
+CDDvalues <- cbind("X" = c(16, 22, 43, 48, 10, 32, 38, 40), CD, DFFITS, DFBETAS)
+CDDvalues
+```
+  
+Considering all CDs are below 20%, it indicates little influence on the fitted values. All the DFFITS and absolute values of DFBETAS are smaller than 1, which indicates no influential observations.  
+  
+  
+(e.)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+# Cook's distance values
+pred1 <- fitted.values(fit)
+AAPD <- numeric(8)
+a <- 1
+for(i in c(16, 22, 43, 48, 10, 32, 38, 40)){
+  fit2 <- lm(Y~X1+X2+X3, data = input2[-i,])
+  pred2 <- predict(fit2, input2)
+  AAPD[a] <- mean(abs((pred2-pred1)/pred1*100))
+  a <- a+1
+}
+AAPD_df <- data.frame(AAPD)
+rownames(AAPD_df) <- c(16, 22, 43, 48, 10, 32, 38, 40)
+AAPD_df
+```
+All the mean absolute difference percents are small, which means little influence and no remedical is needed.  
+  
+  
+(f.)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+cooks.distance(fit)
+plot(Case,cooks.distance(fit),type="l")
+text(Case,cooks.distance(fit))
+```
+The Cook’s distances indicates there are no influential cases.  
+  
+  
+## 10.16  
+(a.)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+pairs(input2)
+cor(input2)
+```
+The scatter plot matrix and the correlation matrix shows no obvious correlations between Y and X1, X2. However, there is a correlation between Y and X3 because the correlation is close to 1.X1, X2 and X3 have low correlation.    
+  
+  
+(b.)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+library(faraway)
+vif(fit)
+```
+Hence, there is no multiplicity problem (All VIF values are close to 1).  
+  
+  
+# Extra credit problem
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+input3 <- read.csv("./BookDataSets/DataSet.csv", header = TRUE)
+Data1_index <- sample(1:168, 130, replace = TRUE)
+Data1 <- input3[Data1_index, ]
+Data2 <- input3[-Data1_index, ]
+names(input3)
+```
+
+(1.)  
+Use Data1 to establish the model, I choose Mallow's $C_p$ criterion.
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+library(leaps)
+Data1.Cp <- leaps(x=Data1[,2:5], y=Data1[,1], names=names(Data1)[2:5], method="Cp")
+
+Data1.Cp <- data.frame(Data1.Cp$which, Data1.Cp$Cp)
+colnames(Data1.Cp)[5] <- "Cp"
+Data1.Cp[order(Data1.Cp$Cp, decreasing = FALSE), ]
+```
+$C_p\leq p$ indicates a good model. Hence, one good model is needed, I choose Food(X1), Decor(X2) and East(X4) as my model subset.
+
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+Data1.fit <- lm(formula = Price ~ Food + Decor + East, data = Data1)
+summary(Data1.fit)
+```
+(2.)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+model1 <- lm(Price~Food+Decor+East, data=Data1)
+lm(model1, Data2)
+pred1 <- predict(model1, Data2)
+sqrt(mean((Data2$Price-pred1)^2))
+model2 <- lm(Price~., data=Data1)
+lm(model2, Data2)
+pred2 <- predict(model2, Data2)
+sqrt(mean((Data2$Price-pred2)^2))
+
+```
+
+Using the square root of MSPE, the model that I choose in step 1 behaves much better with smaller value in compare with uing all predictors.  
+  
+(3.)  
+Define the full model Price ~ Food + Decor + East + Food\*Decor + Food\*East. In case of multicolinearity, we do transformation first. 
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+Data1.trans <- data.frame("Price" = Data1$Price-mean(Data1$Price), 
+                                  "Food" = Data1$Food-mean(Data1$Food),
+                                  "Decor" = Data1$Decor-mean(Data1$Decor),
+                                  "East" = Data1$East-mean(Data1$East))
+Full <- lm(Price~Food+Decor+East + Food*East, data = Data1.trans)
+model <- lm(Price~Food+Decor+East, data = Data1.trans)
+anova(model,Full)
+
+```
+Choose $\alpha = 0.05$.  
+Let $H_0: $ the coefficients of interaction terms are zero and $H_a: $ at least one of them is not zero.  
+Decision rule: we conclude $H_0$ if p-value is larger than $\alpha = 0.05$. Otherwise, conclude $H_a$.  
+The p-value > 0.05, we conculde $H_0$. 

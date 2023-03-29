@@ -1,0 +1,104 @@
+---
+title: "HW4"
+author: "Zeqiu.Yu"
+date: "2022-10-26"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Homework 4  
+## Question 6.5  
+(a)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+input1 <- read.table("./BookDataSets/Chapter  6 Data Sets/CH06PR05.txt")
+names(input1) <- c("Y","X1", "X2")
+pairs(input1[,c(1,2,3)])
+cor(input1[,c(1,2,3)])
+```
+The scatter plot matrix shows Y and $X_1$ has a relative strong relationship. Y and $X_2$ are less correlated.  
+(b)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+fit <- lm(Y~X1+X2, data = input1)
+summary(fit)
+```
+From the summary, we get $\hat{Y} = 37.6500 + 4.4250X_1 + 4.3750X_2$. $b_1$ can be interpreted as holding the sweetness $X_2$, the mean change in degree of brand liking $Y$ is 4.4250 as moisture content $X_1$ increase per unit.  
+(c)&(d)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+Yhat <- fit$fitted.values
+e <- fit$residuals
+```
+```{r, echo = FALSE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+par(mfrow=c(1,1))
+boxplot(e)
+```  
+The distuion of the residuals is centered at 0, and it is symmetric.  
+```{r, echo = FALSE, eval = TRUE, warning = FALSE, result = TRUE,include = TRUE}
+par(mfrow=c(2,2))
+plot(e~Yhat, xlab="Fitted", ylab="Residual", main="Residual plot against Yhat")
+plot(e~input1$X1, xlab="X1", ylab="Residual", main="Residual plot against X1")
+plot(e~input1$X2, xlab="X2", ylab="Residual", main="Residual plot against X2")
+X1X2 <- input1$X1*input1$X2
+plot(e~X1X2, xlab="X1X2", ylab="Residual", main="Residual plot against X1X2")
+```
+Y and $X_1$ tend to have a linear relationship and the errors tend to have constant variance.
+```{r, echo = FALSE, eval = TRUE, warning = FALSE, result = TRUE,include = TRUE}
+par(mfrow=c(1,1))
+qqnorm(e)
+qqline(e)
+```
+It suggests the error terms tend to be normally distributed.
+
+(e)
+```{r, echo = FALSE, eval = TRUE, warning = FALSE, result = TRUE,include = TRUE}
+library("lmtest")
+```
+Let $H_0$: $\gamma_1 = \gamma_2 = 0$, and $H_a: \gamma_1\ and\ \gamma_2$ are not all 0.
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+bptest(fit,studentize = FALSE)
+```
+p-value larger than $\alpha$ conclude error variance constant, otherwise error variance not constant.  
+Because p-value is larger than $\alpha = 0.01$, we conclude error variance constant.  
+
+(f)  
+Let $H_0: E[Y] =  \beta_0 +\beta_1X_1+\beta_2X_2$ and $H_a: E[Y] \neq \beta_0 +\beta_1X_1+\beta_2X_2$. We have seen replications in the scatter plot, then we can conduct lack of fit test.  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+Full <- lm(Y~as.factor(X1)*as.factor(X2), data = input1)
+Reduced <- lm(Y~X1+X2, data = input1)
+anova(Full)
+anova(Reduced)
+anova(Reduced, Full)
+```
+Then MSPE = 7.13, MSLF = (SSTO - SSE)/df = (94.3 - 57)/5 = 7.46. $F^* = \frac{7.46}{7.125} = 1.047 \leq F(0.99; 5 ,8) = 6.63$. If $F^*<6.63$, we will accept $H_0$, else reject. Hence, we accept $H_0$  
+
+## 6.6  
+(a)  
+$H_0:\beta_1=\beta_2= 0$, $H_a:\ not\ both\ \beta_1\ and\ \beta_2\ equal\ 0$. If $F^*$ is smaller than F(0.99; 2,13) = 6.70, we accept $H_0$, else reject $H_0$ and accept $H_a$. According to the summary above, $F^*$ = 129.1 > 6.70. Hence, we accept $H_a$.  
+(b)  
+2.658e-09  
+(c)  
+$\frac{\alpha}{2\times2} = 0.0025$. Then according to the summary table, s{$b_1$} = 0.3011, s{$b_2$} = 0.6733, and t(0.9975; 13) = 3.372. We have $4.4250 \pm 3.372\times 0.3011$ for $\beta_1$, and $4.3750 \pm 3.372\times 0.6733$ for $\beta_2$. Hence, with 99% confidence, $\beta_1$ will between 3.410 and 5.440, and $\beta_2$ between 2.106 and 6.644 simulatneously.  
+
+## 6.7
+(a)  
+$R^2 = \frac{SSR}{SSTO} = \frac{1872.7}{1967.0}$According to the summary table, $R^2 = 0.9521$  
+When $X_1$ and $X_2$ are considered, the variation in Y is reduced by 95.21%.  
+(b)  
+0.9521. Yes.  
+
+## 6.8  
+(a)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+New1 <- data.frame(X1 = 5, X2 = 4)
+predict(fit, New1, interval = "confidence", level = 0.99)
+```
+With 99% confidence, the mean predicted value will between 73.88111 and 80.66889 with repect to $X_{h1} = 5$ and $X_{h2} =4$  
+(b)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+New1 <- data.frame(X1 = 5, X2 = 4)
+predict(fit, New1, interval = "prediction", level = 0.995)
+```
+According to Bonferroni, with 99% confidence, the new observation value will between 67.4292 and 87.1208 with repect to $X_{h1} = 5$ and $X_{h2} =4$.

@@ -1,0 +1,87 @@
+---
+title: "HW7"
+author: "Zeqiu.Yu"
+date: "2022-11-22"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Homework 7
+## 14.7  
+```{r}
+Data <- read.table("./BookDataSets/Chapter 14 Data Sets/CH14PR07.txt",header=FALSE)
+colnames(Data) <- c("Y", "X")
+```
+
+(a.) 
+```{r}
+glm.out = glm(Y~X, family=binomial(logit), data=Data)
+summary(glm.out)
+```
+
+The maximum likelihood estimates: $\beta_0=-4.80751$ and $\beta_1=0.12508$, and  
+$\hat{\pi  }=\frac{exp(-4.80751+0.12508X)}{1+exp(-4.80751+0.12508X)}$.  
+
+(b.)
+```{r}
+plot(Y~X, data=Data)
+lines(Data$X[order(Data$X)], glm.out$fitted[order(Data$X)], 
+       type="l", col="red")
+title(main="Fitted Logistic Regression Line")
+
+Data.smooth <- predict(loess(Y~X, data=Data, span=0.75))
+points(Data$X[order(Data$X)], Data.smooth[order(Data$X)], 
+      type="b",lty=2, col="green")
+legend(5,0.9, c("logistic","loess smooth"), col=c("red", "green"), lty=c(1:2))
+```
+The fitted logistic response function fitts appears to fit well.
+
+## c.
+```{r}
+exp_b1 <- exp(glm.out$coefficients[2])
+exp_b1
+```
+
+exp(b1) is `r exp_b1`. For an one-unit increase in the dollar increase in annual dues, we expect to see about 13.33% increase in the odds of that the membership will not be renewed.
+
+## d.
+```{r}
+new <- data.frame(X=40, Y=1)
+#y.hat <- predict(glm.out, new)      #predict log(p/(1-p))
+#p.hat <- exp(y.hat)/(1+exp(y.hat))  #Transfer to probability
+# or use option of "response" directly
+p.hat <-predict(glm.out, new, type="response") 
+p.hat
+```
+
+The estimated probability that association members will not renew their membership
+if the dues are increased by $40 is `r p.hat`.
+
+## e.
+```{r}
+(log(0.75/0.25)+4.80751)/0.12508
+```
+
+Since $\hat{\pi}$ = 0.75, $log(\frac{\hat{\pi}}{1-\hat{\pi}})=log(\frac{0.75}{0.25})=-4.80751+0.12508X$. Hence, X = 47.2187583.  
+
+## 14.15  
+(a.)
+```{r}
+conf.beta1 <- confint(glm.out, "X", level = 0.90)
+exp(conf.beta1)
+```
+An approximate 90 percent confidence interval for $exp(\beta_1)$ is [1.021468, 1.276781].  
+With 90 percent confidennce, we believe that, for an one-unit increase in the dollar increase in annual dues, the odds of that the membership will not be renewed will increase by between 2.1468% and 27.6781%.
+
+## b)
+```{r}
+summary(glm.out)
+qnorm(0.95, lower.tail=FALSE)
+```
+
+$H_0$: $\beta_1=0$   
+$H_a$: $\beta_1\neq0$.$\\$  
+Decision rule: $z^*=\frac{b_1}{s\{b_1\}}=\frac{0.12508}{0.06676}=1.873577$, $z(1-0.1/2)=z(0.95)=1.645$, if $|z*|\geq z(0.95)$, conclude $Ha$.  
+Conclusion: $|z*|=1.873577 \ge z(0.95)=1.645$. Hence, conclude $H_a$.

@@ -1,0 +1,113 @@
+---
+title: "HW5"
+author: "Zeqiu.Yu"
+date: "2022-11-01"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Homework 5  
+## Problem 7.5
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+input1 <- read.table("./BookDataSets/Chapter  6 Data Sets/CH06PR15.txt")
+names(input1) <- c("Y","X1", "X2","X3")
+```
+(a.) 
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+X2.fit <- lm(Y~X2, data = input1)
+X1X2.fit <- lm(Y~X2+X1, data = input1)
+X1X2X3.fit <- lm(Y~X2+X1+X3, data = input1)
+anova(X2.fit)
+anova(X1X2.fit)
+anova(X1X2X3.fit)
+```
+From the tabel above, $SSR(X_2) = 4860.3$, $SSR(X_1|X_2) = 3896.0$, $SSR(X_3|X_1,X_2) = 364.2$  
+
+(b.)
+$H_0: \beta_3 = 0$  
+$H_a: \beta_3 \neq 0$
+$F^* = \frac{ \frac{SSE(R) - SSE(F)}{df_R - df_F} }{ \frac{SSE(F)}{df_F} }$, If $F^*>F(1-0.025, 1, n-4)$, we will reject the null hypothesis. Otherwise, we accept it.
+
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+DropX3 <- lm(Y~X1+X2, data = input1)
+Full <- lm(Y~X1+X2+X3, data = input1)
+anova(DropX3, Full)
+```
+We find that p-value is 0.06468>0.025, which means $F^* > F(1-0.025, 1, 42)$. Hence, we accept the null Hypothesis.  
+
+## Problem 7.9  
+$H_0: \beta_1 = -1,\; \beta_2 = 0$  
+$H_a: \beta_1 = -1,\; \beta_2 = 0$, at least one of the equalities will not hold.
+$F^* = \frac{ \frac{SSE(R) - SSE(F)}{df_R - df_F} }{ \frac{SSE(F)}{df_F} }$. If the p-value is larger than 0.025, we will reject the null hypothesis. Otherwise, we accept it.
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+ReducedModel <- lm(Y~X3, offset = -X1+0*X2, data = input1)
+anova(ReducedModel, Full)
+```
+The p-value is 0.4208 > 0.025, we do not reject the null Hypothesis.  
+
+## Problem 8.16  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+input2.sub1 <- read.table("./BookDataSets/Chapter  1 Data Sets/CH01PR19.txt")
+input2.sub2 <- read.table("./BookDataSets/Chapter  8 Data Sets/CH08PR16.txt")
+input2 <- cbind(input2.sub1, input2.sub2)
+names(input2) <- c("Y","X1", "X2")
+```
+(a.)  
+The parameter $\beta_2$ measures the differential effect of whether the field is decided or not. $\beta_1$ measures the change of the response variable w.r.t 1 unit change in entrance test score. Given fixed amount of entrance exam, if the student has a major field of concentration, $\beta2$ measures the average GPA increase.  $\beta_0$ measures average GPA when the entrance exam is 0 and the major is not decided.  
+(b.)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+fit2 <- lm(Y~X1+X2, data = input2)
+summary(fit2)
+```
+Then $\hat{Y} = 2.19842 + 0.03789X_1 - 0.09430X_2$.  
+(c.)  
+
+$H_0: \beta_2 =  0$  
+$H_a: \beta_2 \neq 0$
+$F^* = \frac{ \frac{SSE(R) - SSE(F)}{df_R - df_F} }{ \frac{SSE(F)}{df_F} }$. If the p-value is larger than 0.01, we will reject the null hypothesis. Otherwise, we accept it.
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+fit2.dropX2 <- lm(Y~X1, data = input2)
+anova(fit2.dropX2,fit2)
+```
+
+Hence, we do not reject the null hypothesis.
+
+(d.)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+e <- fit2$residuals
+par(mfrow=c(1,1))
+X1X2 <- input2$X1*input2$X2
+plot(e~X1X2, xlab="X1X2", ylab="Residual", main="Residual plot against X1X2")
+```
+The answer is no!  
+
+## Problem 8.20
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+fit3 <- lm(Y~.^2, data = input2)
+summary(fit3)
+```
+Then $\hat{Y} = 3.226318 - 0.002757X_1 + 0.062245X_2 + 0.062245X_1X_2$.  
+(b.)  
+$H_0: \beta_3 =  0$  
+$H_a: \beta_3 \neq 0$
+$F^* = \frac{ \frac{SSE(R) - SSE(F)}{df_R - df_F} }{ \frac{SSE(F)}{df_F} }$. . If the p-value is larger than 0.05, we will reject the null hypothesis. Otherwise, we accept it.
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+anova(fit2, fit3)
+```
+p-value is smaller than 0.05, we reject the null hypothesis and accept the alternative hypothesis.  
+If $X_2 = 0$, E[Y] = $\beta_0 + \beta_1X_1$.  
+If $X_2 = 1$, E[Y] = $(\beta_0 + \beta_2) + (\beta_1 + \beta_3)X_1$  
+The interaction effect in the model is not additive. The average change of response with a unit change in $X_1$ is not the same with $X_2$ constant.  
+
+## Problem 8.21  
+(a.)  
+Hard hat : E{Y}= ($\beta_0$ + $\beta_2$) + $\beta_1X_1$  
+Bump cap : E{Y}= ($\beta_0$ + $\beta_3$) + $\beta_1X_1$  
+None: E{Y} = $\beta_0$ + $\beta_1X_1$  
+
+(b.)  
+(1) $H_0$: $\beta_3 = 0$; $H_a$: $\beta_3 <0$
+(2) $H_0$: $\beta_2 = \beta_3$; $H_a$: $\beta_2 \neq \beta_3$
