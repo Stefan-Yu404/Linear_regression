@@ -1,0 +1,130 @@
+---
+title: "Final"
+author: "Zeqiu.Yu"
+date: "2022-12-05"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Final project  
+## Part 1  
+1.  
+The pairwise correlations are small, it doesn't mean there are no interaction between predictor variables. In addition, the existence of the interection term doesn't depend on the correlation between the predictor variables. Hence, We can’t just conclude that the predictors do not interact with each other.  
+2.  
+We will start from $M_1$. It means $X_2 = X_3 = X_4 = 0$. There are same response functions, when $X_2 = 1, X_3 = X_4 = 0$... Hence, testing if the response function is the same for all four tool models is to test $\beta_2, \beta_3, \beta_4$.  
+Let \[H_0: \beta_2 = \beta_3 = \beta_4 = 0\], $H_a: \beta_2, \beta_3, \beta_4$ at least one of them is not zero.  
+3.  
+When $X_3 = 1, Y = \beta_0 + \beta_1X_1 + \beta_3 +\epsilon$,  
+When $X_4 = 1, Y = \beta_0 + \beta_1X_1 + \beta_4 +\epsilon$. If they are the same, it is to test:  
+\[H_0: \beta_3 = \beta_4\], $H_a:  \beta_3 \neq \beta_4$.  
+
+4.  
+Yes.   
+$X_1$ and $X_2, X_3$ may correlated. When he does regress between $X_1$ and $X_2, X_3$, it is to exclude the effect of $X_2, X_3$ on $X_1$. In the same way, When he does regression between Y and $X_2, X_3$, it is the Y without the effect of $X_2, X_3$. Hence, when he plots Residual1 VS Residual2, it is the true relationship between Y(under the effect of $X_11$) and $X_1$ itself. The relationship is linear and therefore he should include the first order.
+
+  
+## Part 2  
+  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+input1 <- read.table('./HomeSales.txt')
+names(input1) <- c("IdNum","SalesPrice", "FSquaredFeet","NumBedrooms","NumBathrooms","AC",
+                 "GarageSize","Pool","Year","Quality","Style","LotSize","AdHighway")
+input1[1:5,]
+```
+  
+1.)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+fit1 <- lm(SalesPrice~FSquaredFeet * Pool, data = input1)
+summary(fit1)
+```
+Hence, the statistical model is: E[Y_i] = $\beta_0 + \beta_1X_{3i} + \beta_2 X_{8i} + \beta_3X_{3i}X_{8i}$  
+The regression function is : $\hat{Y} = -88538.996 + 161.910X_3 + 105909.972X_8 - 37.213X_3X_8$.  
+When there is a pool, 1 unit change in $X_3$ (Finished Square Foot) will cause 124.697 increase in the response variable (Sales price).  
+When there is no pool, 1 unit change in $X_3$ (Finished Square Foot) will cause 161.910 increase in the response variable (Sales price).  
+
+  
+(2.)  
+\[H_0: \beta_1 = \beta_2 = \beta_3 = 0 \]
+$H_a: \beta_1,\beta_2,\beta_3$ at least one of them is not zero.  
+Decision Rule: Conclusion: when the p-value is larger than $\alpha = 0.05$, we conclude $H_0$, there is no regression relationship. Otherwise, we conclude $H_a$.
+
+p-value is 2.2e-16 according to the summary table, we conclude $H_a$.  
+
+(3.)  
+It is to test the coeffeicient of the interaction term is 0 or not.  
+For the statistical model mentioned in (1.).
+\[H_0: \beta_3 = 0, \;\;\; H_a: \beta_3 \neq 0\]
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+fit2 <- lm(SalesPrice~ FSquaredFeet + Pool, data = input1)
+anova(fit2, fit1)
+```
+The p-value is 0.03001, which is smaller than $\alpha = 0.05$, which means we conclude $H_a$, we should include the interaction.  
+  
+(4.)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+alpha = 0.05
+new = data.frame(FSquaredFeet = 2061, Pool = 1)
+predict(fit1, new, interval = "prediction", level = 1-alpha)
+plot(input1$FSquaredFeet, input1$Pool)
+points(2061,1, col= 2, pch =20)
+X.new <- c(1, 2061, 1)
+n <- dim(input1)[1]
+X <- cbind(rep(1,n), input1$FSquaredFeet, input1$Pool)
+t(X.new)%*%solve(t(X)%*%X)%*%X.new
+summary(hatvalues(fit1))
+```
+0.02929351 is within the range of the leverage levels, we do not need to do extrapolation.  
+  
+(5.)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+par(mfrow=c(1,1))
+n = dim(input1)[1]
+p = 4
+crit <- qt(1-alpha/2/n, n-p-1)
+which(abs(rstudent(fit1)) >= crit)
+```
+
+Yes.  there are usually high sales price.  The houses with identification number 73, 80, 96.
+  
+(6.)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+which.max(pf(cooks.distance(fit1), p, n-p))
+```
+
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+pf(cooks.distance(fit1)[c(104)], p, n-p)
+```
+
+Its CD is below 20%, it indicates little influence on the fitted values.  
+  
+(7.)  
+Let air_conditioning, pool, quality, Style and Adjacent_to_highway be qualitative variables.
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+library(leaps)
+fit.Full <- lm(SalesPrice~ FSquaredFeet + NumBedrooms + NumBathrooms + as.factor(AC) + 
+                 GarageSize + as.factor(Pool) + Year + as.factor(Quality) + as.factor(Style) + 
+                 LotSize + as.factor(AdHighway), input1)
+Base <- lm(SalesPrice~1, data = input1)
+step(fit.Full, scope = list(upper = fit.Full, lower = Base), direction = "both", trace = FALSE)
+
+
+```
+
+As shown in the table, Finished_Squared_Feet, Number_of_Bathrooms, Garage_Size, Year, Quality, Style, LotSize and Adjacent_to_Highway are included.  
+(8.)  
+```{r, echo = TRUE, eval = TRUE, warning = TRUE, result = TRUE,include = TRUE}
+library(leaps)
+selected.model = lm(SalesPrice~ FSquaredFeet + NumBathrooms + 
+                 GarageSize + Year + as.factor(Quality) + as.factor(Style) + 
+                 LotSize + as.factor(AdHighway), input1)  
+e <- selected.model$residuals
+pred3 <- selected.model$fitted.values
+plot(e~pred3)
+qqnorm(e)
+qqline(e, col = 2)
+```
+
+From the first plot, I find a funnel shape, which mneans the variance is not constant. From the qq plot, It is not located along the line, which means the errors are not normally distributed.  
+As for the remedial measures, I prefer to do Box-Cox transformation.
